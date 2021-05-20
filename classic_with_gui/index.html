@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Literally Canvas</title>
+    <link href="../_assets/literallycanvas.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no" />
+
+    <style type="text/css">
+      .fs-container {
+        width: 320px;
+        margin: auto;
+      }
+
+      .literally {
+        width: 100%;
+        height: 100%;
+        position: relative;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="fs-container">
+      <div id="lc"></div>
+    </div>
+
+    <!-- you really ought to include react-dom, but for react 0.14 you don't strictly have to. -->
+    <script src="../_js_libs/react-0.14.3.js"></script>
+    <script src="../_js_libs/literallycanvas.js"></script>
+
+    <script type="text/javascript">
+      var lc = LC.init(document.getElementById("lc"), {
+        imageURLPrefix: '../_assets/lc-images',
+        toolbarPosition: 'bottom',
+        defaultStrokeWidth: 2,
+        strokeWidths: [1, 2, 3, 5,20]
+      });
+      
+     
+    </script>
+    
+    <script>
+			window.AudioContext = window.AudioContext || window.webkitAudioContext;
+		</script>
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js">
+		</script>
+    
+    		<audio controls autoplay></audio>
+    		<script type="text/javascript" src="recorder.js"> </script>
+                    <fieldset><legend>RECORD AUDIO</legend>
+    		<input onclick="startRecording()" type="button" value="start recording" />
+    		<input onclick="stopRecording()" type="button" value="stop recording and play" />
+                    </fieldset>
+    		<script>
+    			var onFail = function(e) {
+    				console.log('Rejected!', e);
+    			};
+
+    			var onSuccess = function(s) {
+    				var context = new AudioContext();
+    				var mediaStreamSource = context.createMediaStreamSource(s);
+    				recorder = new Recorder(mediaStreamSource);
+    				recorder.record();
+
+    				// audio loopback
+    				// mediaStreamSource.connect(context.destination);
+    			}
+
+    			window.URL = window.URL || window.webkitURL;
+    			navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+
+    			var recorder;
+    			var audio = document.querySelector('audio');
+
+    			function startRecording() {
+    				if (navigator.getUserMedia) {
+    					navigator.getUserMedia({audio: true}, onSuccess, onFail);
+    				} else {
+    					console.log('navigator.getUserMedia not present');
+    				}
+    			}
+
+    			function stopRecording() {
+    				recorder.stop();
+    				recorder.exportWAV(function(s) {
+						audio.src = window.URL.createObjectURL(s);
+			  console.log(typeof(s));
+			  let blob = new Blob([s],{ type: "audio/wav" });
+			  var config = {
+				method: 'post',
+				url: 'https://eastus.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=en-US',
+				headers: { 
+				  'Authorization': 'Bearer eyJhbGciOiJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzA0L3htbGRzaWctbW9yZSNobWFjLXNoYTI1NiIsInR5cCI6IkpXVCJ9.eyJyZWdpb24iOiJlYXN0dXMiLCJzdWJzY3JpcHRpb24taWQiOiJlZTQ0MjczMGQyMTI0OTJmODFhYjU4ZDI3YTQxODRhZCIsInByb2R1Y3QtaWQiOiJTcGVlY2hTZXJ2aWNlcy5GMCIsImNvZ25pdGl2ZS1zZXJ2aWNlcy1lbmRwb2ludCI6Imh0dHBzOi8vYXBpLmNvZ25pdGl2ZS5taWNyb3NvZnQuY29tL2ludGVybmFsL3YxLjAvIiwiYXp1cmUtcmVzb3VyY2UtaWQiOiIvc3Vic2NyaXB0aW9ucy80MzBjZmM1Ny04MmM4LTQ5ZGUtOWQyNi0xZDVkNWZkZjg0OWIvcmVzb3VyY2VHcm91cHMvSXNobWVldC9wcm92aWRlcnMvTWljcm9zb2Z0LkNvZ25pdGl2ZVNlcnZpY2VzL2FjY291bnRzL3NwZWVjaHQiLCJzY29wZSI6InNwZWVjaHNlcnZpY2VzIiwiYXVkIjoidXJuOm1zLnNwZWVjaHNlcnZpY2VzLmVhc3R1cyIsImV4cCI6MTYyMTQ0NTkxMSwiaXNzIjoidXJuOm1zLmNvZ25pdGl2ZXNlcnZpY2VzIn0.8S-OfB7aJG8F_dI3yOVXwdOnZnCq_ombk3QnaeFA-20', 
+				  'Content-Type': 'audio/wav; codecs=audio/pcm; samplerate=16000'
+				},
+				data : s
+			  };
+			  axios(config)
+			  .then(function (response) {
+        console.log(JSON.stringify(response.data.DisplayText));
+        var t=(response.data.DisplayText);
+        t=t.slice(0,-1);
+        console.log(t);
+        lc.saveShape(LC.createShape(t, {x:10, y:10, width:10, height:10, strokeWidth:4, strokeColor:3, fillColor:3}));
+			  })
+			  .catch(function (error) {
+				console.log(error);
+			  });
+
+					});				
+    			}
+        </script>
+    
+  </body>
+</html>
