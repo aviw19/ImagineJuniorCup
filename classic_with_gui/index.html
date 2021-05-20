@@ -86,27 +86,59 @@
     				recorder.exportWAV(function(s) {
 						audio.src = window.URL.createObjectURL(s);
 			  console.log(typeof(s));
-			  let blob = new Blob([s],{ type: "audio/wav" });
-			  var config = {
-				method: 'post',
-				url: 'https://eastus.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=en-US',
-				headers: { 
-				  'Authorization': 'Bearer eyJhbGciOiJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzA0L3htbGRzaWctbW9yZSNobWFjLXNoYTI1NiIsInR5cCI6IkpXVCJ9.eyJyZWdpb24iOiJlYXN0dXMiLCJzdWJzY3JpcHRpb24taWQiOiJlZTQ0MjczMGQyMTI0OTJmODFhYjU4ZDI3YTQxODRhZCIsInByb2R1Y3QtaWQiOiJTcGVlY2hTZXJ2aWNlcy5GMCIsImNvZ25pdGl2ZS1zZXJ2aWNlcy1lbmRwb2ludCI6Imh0dHBzOi8vYXBpLmNvZ25pdGl2ZS5taWNyb3NvZnQuY29tL2ludGVybmFsL3YxLjAvIiwiYXp1cmUtcmVzb3VyY2UtaWQiOiIvc3Vic2NyaXB0aW9ucy80MzBjZmM1Ny04MmM4LTQ5ZGUtOWQyNi0xZDVkNWZkZjg0OWIvcmVzb3VyY2VHcm91cHMvSXNobWVldC9wcm92aWRlcnMvTWljcm9zb2Z0LkNvZ25pdGl2ZVNlcnZpY2VzL2FjY291bnRzL3NwZWVjaHQiLCJzY29wZSI6InNwZWVjaHNlcnZpY2VzIiwiYXVkIjoidXJuOm1zLnNwZWVjaHNlcnZpY2VzLmVhc3R1cyIsImV4cCI6MTYyMTQ0NTkxMSwiaXNzIjoidXJuOm1zLmNvZ25pdGl2ZXNlcnZpY2VzIn0.8S-OfB7aJG8F_dI3yOVXwdOnZnCq_ombk3QnaeFA-20', 
-				  'Content-Type': 'audio/wav; codecs=audio/pcm; samplerate=16000'
-				},
-				data : s
-			  };
-			  axios(config)
-			  .then(function (response) {
-        console.log(JSON.stringify(response.data.DisplayText));
-        var t=(response.data.DisplayText);
-        t=t.slice(0,-1);
-        console.log(t);
-        lc.saveShape(LC.createShape(t, {x:10, y:10, width:10, height:10, strokeWidth:4, strokeColor:3, fillColor:3}));
-			  })
-			  .catch(function (error) {
-				console.log(error);
-			  });
+        let blob = new Blob([s],{ type: "audio/wav" });
+        //var axios = require('axios');
+
+var config = {
+  method: 'post',
+  url: 'https://eastus.api.cognitive.microsoft.com/sts/v1.0/issuetoken',
+  headers: { 
+    'Ocp-Apim-Subscription-Key': 'cd39b702be584ff1a91efe7ab0dea26f'
+  }
+};
+var st;
+axios(config)
+.then(function (response) {
+  //console.log(JSON.stringify(response.data));
+  st=(response.data);
+  console.log(st);
+  var t2="Bearer "+st;
+  console.log(t2);
+  var config = {
+    method: 'post',
+    url: 'https://eastus.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=en-US',
+    headers: { 
+      'Authorization': t2, 
+      'Content-Type': 'audio/wav; codecs=audio/pcm; samplerate=16000'
+    },
+    data : s
+    };
+    axios(config)
+    .then(function (response) {
+    console.log(JSON.stringify(response.data.DisplayText));
+    var t=(response.data.DisplayText);
+    t=t.slice(0,-1);
+    console.log(t);
+    if(t.localeCompare("Rectangle")==0){
+      console.log("yoyo");
+    lc.saveShape(LC.createShape(t, {x:10, y:10, width:20, height:10, strokeWidth:4, strokeColor:3, fillColor:3}));
+    }
+    else{
+      console.log("hello");
+      lc.saveShape(LC.createShape('Line', {x1:10, y1:10,x2:20,y2:20, strokeWidth:4, strokeColor:3, fillColor:3}));
+    }
+    
+    //lc.createShape(LC.createShape(t,{x1:10,x2:20,y1:10,y2:20,color:3}));
+    })
+    .catch(function (error) {
+    console.log(error);
+    });
+})
+.catch(function (error) {
+  console.log(error);
+});
+console.log(st);
+			 
 
 					});				
     			}
