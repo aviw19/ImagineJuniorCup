@@ -1,0 +1,91 @@
+<html>
+
+		<script>
+			window.AudioContext = window.AudioContext || window.webkitAudioContext;
+		</script>
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js">
+		</script>
+    	<body>
+    		<audio controls autoplay></audio>
+    		<script type="text/javascript" src="recorder.js"> </script>
+                    <fieldset><legend>RECORD AUDIO</legend>
+    		<input onclick="startRecording()" type="button" value="start recording" />
+    		<input onclick="stopRecording()" type="button" value="stop recording and play" />
+                    </fieldset>
+    		<script>
+    			var onFail = function(e) {
+    				console.log('Rejected!', e);
+    			};
+
+    			var onSuccess = function(s) {
+    				var context = new AudioContext();
+    				var mediaStreamSource = context.createMediaStreamSource(s);
+    				recorder = new Recorder(mediaStreamSource);
+    				recorder.record();
+
+    				// audio loopback
+    				// mediaStreamSource.connect(context.destination);
+    			}
+
+    			window.URL = window.URL || window.webkitURL;
+    			navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+
+    			var recorder;
+    			var audio = document.querySelector('audio');
+
+    			function startRecording() {
+    				if (navigator.getUserMedia) {
+    					navigator.getUserMedia({audio: true}, onSuccess, onFail);
+    				} else {
+    					console.log('navigator.getUserMedia not present');
+    				}
+    			}
+
+    			function stopRecording() {
+    				recorder.stop();
+    				recorder.exportWAV(function(s) {
+						audio.src = window.URL.createObjectURL(s);
+						//console.log(audio.src);
+						//var data = audio.src;
+						//console.log("yo1");
+			
+				
+					/*var element = document.createElement('a');
+			
+			  	element.setAttribute('href',data);
+			  	element.setAttribute('download', 'yo.wav');
+			
+			  	element.style.display = 'none';
+			  	document.body.appendChild(element);
+			
+			  element.click();
+			
+			  document.body.removeChild(element);*/
+			  console.log("s");
+			 
+			  console.log("typeof");
+			  console.log(typeof(s));
+			  let blob = new Blob([s],{ type: "audio/wav" });
+			  var config = {
+				method: 'post',
+				url: 'https://eastus.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=en-US',
+				headers: { 
+				  'Authorization': 'Bearer eyJhbGciOiJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzA0L3htbGRzaWctbW9yZSNobWFjLXNoYTI1NiIsInR5cCI6IkpXVCJ9.eyJyZWdpb24iOiJlYXN0dXMiLCJzdWJzY3JpcHRpb24taWQiOiJlZTQ0MjczMGQyMTI0OTJmODFhYjU4ZDI3YTQxODRhZCIsInByb2R1Y3QtaWQiOiJTcGVlY2hTZXJ2aWNlcy5GMCIsImNvZ25pdGl2ZS1zZXJ2aWNlcy1lbmRwb2ludCI6Imh0dHBzOi8vYXBpLmNvZ25pdGl2ZS5taWNyb3NvZnQuY29tL2ludGVybmFsL3YxLjAvIiwiYXp1cmUtcmVzb3VyY2UtaWQiOiIvc3Vic2NyaXB0aW9ucy80MzBjZmM1Ny04MmM4LTQ5ZGUtOWQyNi0xZDVkNWZkZjg0OWIvcmVzb3VyY2VHcm91cHMvSXNobWVldC9wcm92aWRlcnMvTWljcm9zb2Z0LkNvZ25pdGl2ZVNlcnZpY2VzL2FjY291bnRzL3NwZWVjaHQiLCJzY29wZSI6InNwZWVjaHNlcnZpY2VzIiwiYXVkIjoidXJuOm1zLnNwZWVjaHNlcnZpY2VzLmVhc3R1cyIsImV4cCI6MTYyMTI3NDU3MywiaXNzIjoidXJuOm1zLmNvZ25pdGl2ZXNlcnZpY2VzIn0.sJLmUrij8sTYLnbbstXdDZp0WQs1OgH548aCYOW_984', 
+				  'Content-Type': 'audio/wav; codecs=audio/pcm; samplerate=16000'
+				},
+				data : s
+			  };
+			  
+			  axios(config)
+			  .then(function (response) {
+				console.log(JSON.stringify(response.data));
+			  })
+			  .catch(function (error) {
+				console.log(error);
+			  });
+
+					});				
+    			}
+    		</script>
+    	</body>
+    </html>

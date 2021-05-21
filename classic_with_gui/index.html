@@ -1,0 +1,148 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Literally Canvas</title>
+    <link href="../_assets/literallycanvas.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no" />
+
+    <style type="text/css">
+      .fs-container {
+        width: 320px;
+        margin: auto;
+      }
+
+      .literally {
+        width: 100%;
+        height: 100%;
+        position: relative;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="fs-container">
+      <div id="lc"></div>
+    </div>
+
+    <!-- you really ought to include react-dom, but for react 0.14 you don't strictly have to. -->
+    <script src="../_js_libs/react-0.14.3.js"></script>
+    <script src="../_js_libs/literallycanvas.js"></script>
+
+    <script type="text/javascript">
+      var lc = LC.init(document.getElementById("lc"), {
+        imageURLPrefix: '../_assets/lc-images',
+        toolbarPosition: 'bottom',
+        defaultStrokeWidth: 2,
+        strokeWidths: [1, 2, 3, 5,20]
+      });
+      
+     
+    </script>
+    
+    <script>
+			window.AudioContext = window.AudioContext || window.webkitAudioContext;
+		</script>
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js">
+		</script>
+    
+    		<audio controls autoplay></audio>
+    		<script type="text/javascript" src="recorder.js"> </script>
+                    <fieldset><legend>RECORD AUDIO</legend>
+    		<input onclick="startRecording()" type="button" value="start recording" />
+    		<input onclick="stopRecording()" type="button" value="stop recording and play" />
+                    </fieldset>
+    		<script>
+    			var onFail = function(e) {
+    				console.log('Rejected!', e);
+    			};
+
+    			var onSuccess = function(s) {
+    				var context = new AudioContext();
+    				var mediaStreamSource = context.createMediaStreamSource(s);
+    				recorder = new Recorder(mediaStreamSource);
+    				recorder.record();
+
+    				// audio loopback
+    				// mediaStreamSource.connect(context.destination);
+    			}
+
+    			window.URL = window.URL || window.webkitURL;
+    			navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+
+    			var recorder;
+    			var audio = document.querySelector('audio');
+
+    			function startRecording() {
+    				if (navigator.getUserMedia) {
+    					navigator.getUserMedia({audio: true}, onSuccess, onFail);
+    				} else {
+    					console.log('navigator.getUserMedia not present');
+    				}
+    			}
+
+    			function stopRecording() {
+    				recorder.stop();
+    				recorder.exportWAV(function(s) {
+						audio.src = window.URL.createObjectURL(s);
+			  console.log(typeof(s));
+        let blob = new Blob([s],{ type: "audio/wav" });
+        //var axios = require('axios');
+
+var config = {
+  method: 'post',
+  url: 'https://eastus.api.cognitive.microsoft.com/sts/v1.0/issuetoken',
+  headers: { 
+    'Ocp-Apim-Subscription-Key': 'cd39b702be584ff1a91efe7ab0dea26f'
+  }
+};
+var st;
+axios(config)
+.then(function (response) {
+  //console.log(JSON.stringify(response.data));
+  st=(response.data);
+  console.log(st);
+  var t2="Bearer "+st;
+  console.log(t2);
+  var config = {
+    method: 'post',
+    url: 'https://eastus.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=en-US',
+    headers: { 
+      'Authorization': t2, 
+      'Content-Type': 'audio/wav; codecs=audio/pcm; samplerate=16000'
+    },
+    data : s
+    };
+    axios(config)
+    .then(function (response) {
+    console.log(JSON.stringify(response.data.DisplayText));
+    var t=(response.data.DisplayText);
+    t=t.slice(0,-1);
+    console.log(t);
+    if(t.localeCompare("Rectangle")==0){
+      console.log("yoyo");
+    lc.saveShape(LC.createShape(t, {x:10, y:10, width:20, height:10, strokeWidth:4, strokeColor:3, fillColor:3}));
+    }
+    else{
+      console.log("hello");
+      lc.saveShape(LC.createShape('Line', {x1:10, y1:10,x2:20,y2:20, strokeWidth:4, strokeColor:3, fillColor:3}));
+    }
+    
+    //lc.createShape(LC.createShape(t,{x1:10,x2:20,y1:10,y2:20,color:3}));
+    })
+    .catch(function (error) {
+    console.log(error);
+    });
+})
+.catch(function (error) {
+  console.log(error);
+});
+console.log(st);
+			 
+
+					});				
+    			}
+        </script>
+    
+  </body>
+</html>
